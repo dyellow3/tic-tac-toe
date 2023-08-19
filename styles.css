@@ -1,0 +1,38 @@
+.gameBoard {
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: repeat(3, 200px);
+    grid-template-rows: repeat(3, 200px);
+    width: 600px;
+    height: 600px;
+}
+
+.box {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    outline: 1px solid black;
+    font-size: 100px;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.playerContainer {
+    display: flex;
+    width: 600px;
+    padding-top: 15px;
+    justify-content: space-between;
+}
+
+.gameOptions {
+    padding-top: 15px;
+}
