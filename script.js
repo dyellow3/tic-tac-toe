@@ -1,5 +1,3 @@
-
-
 const gameBoard = (() => {
     let board = ['', '', '', '', '', '', '', '', ''];
 
@@ -19,7 +17,13 @@ const gameBoard = (() => {
 
     const getBoard = () => [...board];
 
-    return { move, checkWin, getBoard };
+    const resetBoard = () => {
+        for(i = 0; i < 9; i++) {
+            board[i] = '';
+        }
+    }
+
+    return { move, checkWin, getBoard, resetBoard };
 })();
 
 
@@ -32,6 +36,8 @@ const player = (name, symbol) => {
 
 
 const play = (() => {
+    const boxes = document.querySelectorAll('.box');
+    const gameResult = document.querySelector('.gameResult');
     let round = 0;
     const board = gameBoard;
     const player1 = player('testname', 'X');
@@ -39,10 +45,12 @@ const play = (() => {
 
     const endGame = (player, round) => {
         if(round === 9) {
-            console.log("Draw!")
+            console.log('Draw!')
+            gameResult.innerText = 'Draw!';
         }
         else {
             console.log(`${player.getName} wins on round ${round}!`);
+            gameResult.innerText = `${player.getName} wins!`;
         }
         boxes.forEach(box => {
             box.removeEventListener('click', handleClick);
@@ -70,10 +78,15 @@ const play = (() => {
         }
     }
 
-    const boxes = document.querySelectorAll('.box');
+    const resetGame = () => {
+        board.resetBoard();
+        boxes.forEach(box => {
+            box.innerText = '';
+        })
+    }
+
+    resetGame();
     boxes.forEach(box => {
         box.addEventListener('click', handleClick);
     })
 })();
-
-play;
