@@ -29,8 +29,21 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    outline: 1px solid black;
+    border: 2px solid black;
     font-size: 100px;
+}
+
+
+.top-left , .top-right , .bottom-left , .bottom-right {
+    border: transparent;
+}
+.middle-left, .middle-right {
+    border-left: transparent;
+    border-right: transparent;
+}
+.bottom, .top {
+    border-bottom: transparent;
+    border-top: transparent;
 }
 
 body {
