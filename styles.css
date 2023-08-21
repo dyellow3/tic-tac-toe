@@ -1,15 +1,10 @@
-@font-face {
-    font-family: ArcadeClassic;
-    src: url(fonts/ARCADECLASSIC.TTF)
-}
-
 .gameResult {
     height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 50px;
-    font-family: ArcadeClassic;
+    font-family:'Courier New', Courier, monospace;
 }
 
 .gameBoard {
@@ -31,6 +26,7 @@
     text-align: center;
     border: 2px solid black;
     font-size: 100px;
+    font-family:'Courier New', Courier, monospace;
 }
 
 
