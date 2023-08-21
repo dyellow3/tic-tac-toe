@@ -64,7 +64,7 @@ const play = (() => {
     const gameResult = document.querySelector('.gameResult');
     let round = 0;
     const board = gameBoard;
-    const gameStatus = true;
+    let gameStatus = true;
     const player1 = player('testname', 'X');
     const computer1 = computer('easy', 'O');
 
