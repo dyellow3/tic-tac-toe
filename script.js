@@ -1,7 +1,7 @@
 const gameBoard = (() => {
     let board = ['', '', '', '', '', '', '', '', ''];
 
-    const move = (index, symbol) => {
+    const check = (index, symbol) => {
         if(board[index] === '') {
             board[index] = symbol;
             return true;
@@ -21,12 +21,16 @@ const gameBoard = (() => {
         board = ['', '', '', '', '', '', '', '', ''];
     }
 
-    return { move, checkWin, getBoard, resetBoard };
+    return { check, checkWin, getBoard, resetBoard };
 })();
 
 
 const player = (name, symbol) => {
-    return { name, symbol };
+    const move = (index, box) => {
+        box.innerText = `${symbol}`;
+        console.log(`${name} takes index ${index}`);
+    }
+    return { name, symbol, move };
 }
 
 const computer = (difficulty, symbol) => {
@@ -35,7 +39,7 @@ const computer = (difficulty, symbol) => {
     const move = (board) => {
         if (difficulty === 'easy') {
             let randomMove = Math.floor(Math.random() * 9);
-            while (!board.move(randomMove, symbol)) {
+            while (!board.check(randomMove, symbol)) {
                 randomMove = Math.floor(Math.random() * 9);
             }
 
@@ -64,6 +68,8 @@ const play = (() => {
     const board = gameBoard;
     let gameStatus = true;
     const player1 = player('testname', 'X');
+    
+    //player2 is computer for now, for testing
     const player2 = computer('easy', 'O');
 
     const endGame = (player, round) => {
@@ -97,67 +103,45 @@ const play = (() => {
     const makeMove = (event) => {
         const box = event.target;
         const boxIndex = parseInt(box.classList[1]);
-        const currentPlayer = round % 2 === 0 ? player1 : player2;
+        let currentPlayer = round % 2 === 0 ? player1 : player2;
 
 
-        if (board.move(boxIndex, currentPlayer.symbol)) {
-            //player move
-            box.innerText = `${currentPlayer.symbol}`;
-            console.log(`${currentPlayer.name} takes index ${boxIndex}`);
+        if (board.check(boxIndex, currentPlayer.symbol)) {
+            currentPlayer.move(boxIndex, box);
 
             if (board.checkWin(currentPlayer.symbol)) {
                 endGame(currentPlayer, round);
             }
             else {
                 round++;
-                console.log(`Round: ${round}`);
+                currentPlayer = round % 2 === 0 ? player1 : player2;
+                console.log(`Round: ${round} over`);
                 if (round === 9) {
                     endGame(currentPlayer, round);
                 }
             }
 
-            //computer move
+            //computer move for now, need to adjust for when its player v player
+            //ideally check if its computer, or player, and go from there
             if (gameStatus) {
-                player2.move(gameBoard);
-                if (gameBoard.checkWin(player2.symbol)) {
-                    endGame(player2, round);
+                currentPlayer.move(board);
+                if (gameBoard.checkWin(currentPlayer.symbol)) {
+                    endGame(currentPlayer, round);
                 }
                 else {
                     round++;
-                    console.log(round);
+                    console.log(`Round: ${round} over`);
                     if (round === 9) {
-                        endGame(player2, round);
+                        endGame(currentPlayer, round);
                     }
                 }
             }
 
         }
     }
-    
-    /*
-    const makeMove = (event) => {
-        const box = event.target;
-        const boxIndex = parseInt(box.classList[1]);
-        const currentPlayer = round % 2 === 0 ? player : computer;
 
-        if (gameBoard.move(boxIndex, currentPlayer.getSymbol)) {
-            box.innerText = `${currentPlayer.getSymbol}`;
-            console.log(`${currentPlayer.getName} box with index: ${boxIndex}`);
-            if (gameBoard.checkWin(currentPlayer.getSymbol)) {
-                endGame(currentPlayer, round);
-            }
-            else {
-                round++;
-                console.log(round);
-                if (round === 9) {
-                    endGame(currentPlayer, round);
-                }
-            }
-        }
-    }
-    */
-
-
+    const resetButton = document.querySelector('.reset');
+    resetButton.addEventListener('click', resetGame);
 
     resetGame();
     boxes.forEach(box => {
