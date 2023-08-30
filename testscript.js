@@ -8,31 +8,32 @@ const gameBoard = (() => {
         return false;
     }
 
-    const take = (index, symbol) => {
+    const take = (board, index, symbol) => {
         board[index] = symbol;
+        console.log(mainBoard);
     }
 
-    const checkTie = () => {
+    const checkTie = (board) => {
         //assumings its a tie
         let flag = true;
         for (let i = 0; i < 9; i++) {
             //if theres a empty spot, then its not a tie
-            if (gameBoard.check(mainBoard, i)) {
+            if (gameBoard.check(board, i)) {
                 flag = false;
             }
         }
         return flag;
     }
 
-    const checkWin = (symbol) => {
+    const checkWin = (board, symbol) => {
         const winningCombos = [[0, 1, 2], [0, 3, 6], [0, 4, 8], [1, 4, 7], [2, 5, 8], [2, 4, 6], [3, 4, 5], [6, 7, 8]];
 
         return winningCombos.some(combo => combo.every(index => board[index] === symbol));
     }
 
-    const getBoard = () => [...mainBoard];
+    const getBoard = () => mainBoard;
 
-    const resetBoard = () => {
+    const resetBoard = (board) => {
         board = ['', '', '', '', '', '', '', '', ''];
     }
 
@@ -40,37 +41,38 @@ const gameBoard = (() => {
 
 })();
 
-const miniMax = ((board, isMaximizing, symbol) => {
+const miniMax = ((board, isMaximizing, symbol, depth) => {
+    if(depth === 5) { return 0; }
     let computerSymbol;
     let playerSymbol;
     let currSymbol;
     if (isMaximizing) {
         computerSymbol = symbol;
         currSymbol = computerSymbol;
-        if (symbol === 'x') {
-            playerSymbol = 'o';
+        if (symbol === 'X') {
+            playerSymbol = 'O';
         }
         else {
-            playerSymbol = 'x';
+            playerSymbol = 'X';
         }
     }
     else {
         playerSymbol = symbol;
         currSymbol = playerSymbol;
-        if (symbol === 'x') {
-            computerSymbol = 'o';
+        if (symbol === 'X') {
+            computerSymbol = 'O';
         }
         else {
-            computerSymbol = 'x';
+            computerSymbol = 'X';
         }
     }
 
-    if (board.checkWin(currSymbol)) {
+    if (gameBoard.checkWin(board, currSymbol)) {
         if (currSymbol === playerSymbol) {
             //its players turn
             return -1;
         }
-        else if (board.checkTie()) {
+        else if (gameBoard.checkTie(board)) {
             //its a tie 
             return 0;
         }
@@ -86,7 +88,8 @@ const miniMax = ((board, isMaximizing, symbol) => {
     let newValue;
     let bestIndex;
     for (let i = 0; i <= 8; i++) {
-        if (board.check(board, i)) {
+        if (gameBoard.check(board, i)) {
+            console.log(i);
             available.push(i);
         }
     }
@@ -94,18 +97,21 @@ const miniMax = ((board, isMaximizing, symbol) => {
     //game is not over yet
     //this will be computers turn
 
-    let newBoard = board;
+    let newBoard = [...board];
     if (isMaximizing) {
         value = -Infinity;
         for (let i = 0; i < available.length; i++) {
-            newBoard.take(i);
-            newValue = miniMax(newBoard, false, playerSymbol);
+            gameBoard.take(newBoard, available[i], computerSymbol);
+            newValue = miniMax(newBoard, false, playerSymbol, depth+1);
+            console.log(`newValue = ${newValue} value = ${value} depth = ${depth}`)
             if (newValue > value) {
                 value = newValue;
                 bestIndex = i;
             }
         }
         //value is the best/largest value we can get
+        console.log(`RETURNING INDEX: ${bestIndex} FROM MAX`)
+        console.log(`MAX VALUE: ${value}`)
         return bestIndex;
     }
 
@@ -113,13 +119,14 @@ const miniMax = ((board, isMaximizing, symbol) => {
     else {
         value = Infinity;
         for (let i = 0; i < available.length; i++) {
-            newBoard.take(i);
-            newValue = miniMax(newBoard, true, computerSymbol);
-            if (newValue > value) {
+            gameBoard.take(newBoard, available[i], playerSymbol);
+            newValue = miniMax(newBoard, true, computerSymbol, depth+1);
+            if (newValue < value) {
                 value = newValue;
             }
         }
         //value is the best/largest value we can get
+        console.log(`RETURNING: ${value} FROM MIN`)
         return value;
     }
 
@@ -131,7 +138,7 @@ const player = (name, symbol) => {
         let boxIndex = parseInt(box.classList[1]);
         console.log(boxIndex);
         if (gameBoard.check(gameBoard.getBoard(), boxIndex)) {
-            gameBoard.take(boxIndex, symbol);
+            gameBoard.take(gameBoard.getBoard(), boxIndex, symbol);
             box.innerText = `${symbol}`;
             console.log(`${name} takes index ${boxIndex}`);
             return true;
@@ -150,22 +157,21 @@ const computer = (difficulty, symbol) => {
         if (difficulty === 'easy') {
             let randomMove = Math.floor(Math.random() * 9);
             while (!gameBoard.check(gameBoard.getBoard(), randomMove)) {
-                console.log('asdasdasd');
                 randomMove = Math.floor(Math.random() * 9);
             }
 
-            gameBoard.take(randomMove, symbol);
+            gameBoard.take(gameBoard.getBoard(), randomMove, symbol);
             const box = document.querySelector(`.gameBoard .box:nth-child(${randomMove + 1})`);
             box.innerText = symbol;
             console.log(`Computer takes index ${randomMove}`);
         }
         //minimax
         else if (difficulty === 'hard') {
-            //need to store available indexs
-            let newBoard = gameBoard;
-            let bestScore = -Infinity;
-            let bestMove = miniMax(gameBoard, true, symbol);
-            gameBoard.take(bestMove);
+            let bestMove = miniMax(gameBoard.getBoard(), true, symbol, 0);
+            gameBoard.take(gameBoard.getBoard(), bestMove, symbol);
+            const box = document.querySelector(`.gameBoard .box:nth-child(${bestMove + 1})`);
+            box.innerText = symbol;
+            console.log(`Computer takes index ${bestMove}`);
 
             //terminal function that tells us, we have checkWin in gameBoard for this
 
@@ -199,7 +205,7 @@ const play = (() => {
     let round = 0;
     const player1 = player('test', 'X');
     //computer only for now
-    const computer1 = computer('easy', 'O');
+    const computer1 = computer('hard', 'O');
     let isComputerTurn = false;
 
     const endGame = (player, round) => {
@@ -218,7 +224,7 @@ const play = (() => {
     }
 
     const resetGame = () => {
-        gameBoard.resetBoard();
+        gameBoard.resetBoard(gameBoard.getBoard());
         round = 0;
         boxes.forEach(box => {
             box.innerText = '';
@@ -236,9 +242,10 @@ const play = (() => {
 
             if (currentPlayer.id === 'player') {
                 if (currentPlayer.move(box)) {
-                    if ((gameBoard.checkWin(currentPlayer.symbol)) || round === 8) {
+                    if ((gameBoard.checkWin(gameBoard.getBoard(), currentPlayer.symbol)) || round === 8) {
                         endGame(currentPlayer, round);
                     }
+                    
                     else {
                         round++;
                         console.log(`Round: ${round} over`);
@@ -253,7 +260,7 @@ const play = (() => {
                 isComputerTurn = true;
                 setTimeout(() => {
                     currentPlayer.move();
-                    if (gameBoard.checkWin(currentPlayer.symbol) || round === 8) {
+                    if (gameBoard.checkWin(gameBoard.getBoard(), currentPlayer.symbol) || round === 8) {
                         endGame(currentPlayer, round);
                     }
                     else {
