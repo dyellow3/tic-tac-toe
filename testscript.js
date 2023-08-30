@@ -40,13 +40,12 @@ const gameBoard = (() => {
 
 })();
 
+//depth can be used for optimizations, !!not used for now!!
 const miniMax = ((board, isMaximizing, symbol, depth) => {
     let computerSymbol;
     let playerSymbol;
-    let currSymbol;
     if (isMaximizing) {
         computerSymbol = symbol;
-        currSymbol = computerSymbol;
         if (symbol === 'X') {
             playerSymbol = 'O';
         }
@@ -56,7 +55,6 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
     }
     else {
         playerSymbol = symbol;
-        currSymbol = playerSymbol;
         if (symbol === 'X') {
             computerSymbol = 'O';
         }
@@ -73,74 +71,79 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
 
     //calculate available moves
     let available = [];
-    let value;
-    let newValue;
     for (let i = 0; i <= 8; i++) {
         if (gameBoard.check(board, i)) {
             available.push(i);
         }
     }
 
-    //game is not over yet
-    //this will be computers turn
-
+    //variables needed for next steps
     let newBoard; 
+    let value;
+    let newValue;
+
+    //if we are maximizing (computers turn), we need to make value as LARGE as possible
     if (isMaximizing) {
-        value = -Infinity;
+        value = -10;
         for (let i = 0; i < available.length; i++) {
+            //we assign newBoard to existing board so it resets every time
             newBoard = [...board];
             gameBoard.take(newBoard, available[i], computerSymbol);
+            //testing value of move on this newBoard
             newValue = miniMax(newBoard, false, playerSymbol, depth+1);
             if (newValue > value) {
                 value = newValue;
             }
         }
-        //value is the best/largest value we can get
+        //value is the largest value (best value for computer)
         return value;
     }
 
-    //if its min players turn, need to make vaue of the game as SMALL as possible
+    //if we are minimizing (players turn), we to make value as SMALL as possible
     else {
-        value = Infinity;
+        value = 10;
         for (let i = 0; i < available.length; i++) {
-            console.log()
             newBoard = [...board];
             gameBoard.take(newBoard, available[i], playerSymbol);
+
             newValue = miniMax(newBoard, true, computerSymbol, depth+1);
             if (newValue < value) {
                 value = newValue;
             }
         }
-        //value is the best/largest value we can get
+        //value is the smallest value (best value for player/opponent)
         return value;
     }
-
 });
 
 const findBestIndex = ((board, symbol) => {
+    //find available moves
     let available = [];
-    let bestVal = -1000;
-    let bestIndex = -1;
     for (let i = 0; i <= 8; i++) {
         if (gameBoard.check(board, i)) {
             available.push(i);
         }
     }
-
+    
+    //variables needed for next steps
     let newBoard;
     let playerSymbol;
+    let bestVal = -10;
+    let bestIndex = -1;
+
+    //we are testing each available move
     for(let i = 0; i < available.length; i++) {
-        
+        //newBoard resets everytime to fresh board that we can test moves on
         newBoard = [...board];
-        console.log(`board: ${newBoard}`);
+
+        //assuming that the symbol in the input is the computers symbol
         if(symbol === 'X') {  playerSymbol = 'O'; }
         else { playerSymbol = 'X'; }
+
+        //testing available move on new board
         gameBoard.take(newBoard, available[i], symbol);
-        console.log(`Testing UPDATED board: ${newBoard}`);
         let moveVal = miniMax(newBoard, false, playerSymbol, 0);
         if(moveVal > bestVal) {
-            console.log(`New best moveValue assigned ${moveVal}`);
-            console.log(`New best index assigned ${bestIndex}`);
             bestIndex = available[i];
             bestVal = moveVal;
         }
@@ -210,7 +213,7 @@ const play = (() => {
     let isComputerTurn = false;
 
     const endGame = (player, round) => {
-        if (round === 9) {
+        if (round === 8) {
             console.log('Draw!')
             gameResult.innerText = 'Draw!';
         }
