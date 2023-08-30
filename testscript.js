@@ -1,3 +1,8 @@
+//TODO
+//Fix resetBoard()
+//Find a cleaner way to get mainBoard / find a cleaner way to implement gameBoard functions
+//Add option to play against another player , or play against either a easy ai or hard ai
+
 const gameBoard = (() => {
     let mainBoard = ['', '', '', '', '', '', '', '', ''];
 
@@ -15,6 +20,8 @@ const gameBoard = (() => {
     const checkTie = (board) => {
         //assumings its a tie
         let flag = true;
+        //if theres a win, then its not a tie
+        if(gameBoard.checkWin(board, 'X') || gameBoard.checkWin(board, 'O')) { return false; }
         for (let i = 0; i < 9; i++) {
             //if theres a empty spot, then its not a tie
             if (gameBoard.check(board, i)) {
@@ -93,6 +100,7 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
             newValue = miniMax(newBoard, false, playerSymbol, depth+1);
             if (newValue > value) {
                 value = newValue;
+
             }
         }
         //value is the largest value (best value for computer)
@@ -148,7 +156,6 @@ const findBestIndex = ((board, symbol) => {
             bestVal = moveVal;
         }
     }
-    console.log(bestIndex);
     return bestIndex;
 })
 
