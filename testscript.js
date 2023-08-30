@@ -10,7 +10,6 @@ const gameBoard = (() => {
 
     const take = (board, index, symbol) => {
         board[index] = symbol;
-        console.log(mainBoard);
     }
 
     const checkTie = (board) => {
@@ -42,7 +41,6 @@ const gameBoard = (() => {
 })();
 
 const miniMax = ((board, isMaximizing, symbol, depth) => {
-    if(depth === 5) { return 0; }
     let computerSymbol;
     let playerSymbol;
     let currSymbol;
@@ -67,29 +65,18 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
         }
     }
 
-    if (gameBoard.checkWin(board, currSymbol)) {
-        if (currSymbol === playerSymbol) {
-            //its players turn
-            return -1;
-        }
-        else if (gameBoard.checkTie(board)) {
-            //its a tie 
-            return 0;
-        }
-        else {
-            //its computers turn
-            return 1;
-        }
-    }
+    //so if we are maximizing, it is the computers turn. Therefore, if there is a win, the player made the last move, and they have won
+    if(gameBoard.checkTie(board)) { return 0; }
+    if(isMaximizing && gameBoard.checkWin(board, playerSymbol)) { return -1;  }
+    if(!isMaximizing && gameBoard.checkWin(board, computerSymbol)) {  return 1;  }
+    
 
     //calculate available moves
     let available = [];
     let value;
     let newValue;
-    let bestIndex;
     for (let i = 0; i <= 8; i++) {
         if (gameBoard.check(board, i)) {
-            console.log(i);
             available.push(i);
         }
     }
@@ -97,28 +84,27 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
     //game is not over yet
     //this will be computers turn
 
-    let newBoard = [...board];
+    let newBoard; 
     if (isMaximizing) {
         value = -Infinity;
         for (let i = 0; i < available.length; i++) {
+            newBoard = [...board];
             gameBoard.take(newBoard, available[i], computerSymbol);
             newValue = miniMax(newBoard, false, playerSymbol, depth+1);
-            console.log(`newValue = ${newValue} value = ${value} depth = ${depth}`)
             if (newValue > value) {
                 value = newValue;
-                bestIndex = i;
             }
         }
         //value is the best/largest value we can get
-        console.log(`RETURNING INDEX: ${bestIndex} FROM MAX`)
-        console.log(`MAX VALUE: ${value}`)
-        return bestIndex;
+        return value;
     }
 
     //if its min players turn, need to make vaue of the game as SMALL as possible
     else {
         value = Infinity;
         for (let i = 0; i < available.length; i++) {
+            console.log()
+            newBoard = [...board];
             gameBoard.take(newBoard, available[i], playerSymbol);
             newValue = miniMax(newBoard, true, computerSymbol, depth+1);
             if (newValue < value) {
@@ -126,11 +112,42 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
             }
         }
         //value is the best/largest value we can get
-        console.log(`RETURNING: ${value} FROM MIN`)
         return value;
     }
 
 });
+
+const findBestIndex = ((board, symbol) => {
+    let available = [];
+    let bestVal = -1000;
+    let bestIndex = -1;
+    for (let i = 0; i <= 8; i++) {
+        if (gameBoard.check(board, i)) {
+            available.push(i);
+        }
+    }
+
+    let newBoard;
+    let playerSymbol;
+    for(let i = 0; i < available.length; i++) {
+        
+        newBoard = [...board];
+        console.log(`board: ${newBoard}`);
+        if(symbol === 'X') {  playerSymbol = 'O'; }
+        else { playerSymbol = 'X'; }
+        gameBoard.take(newBoard, available[i], symbol);
+        console.log(`Testing UPDATED board: ${newBoard}`);
+        let moveVal = miniMax(newBoard, false, playerSymbol, 0);
+        if(moveVal > bestVal) {
+            console.log(`New best moveValue assigned ${moveVal}`);
+            console.log(`New best index assigned ${bestIndex}`);
+            bestIndex = available[i];
+            bestVal = moveVal;
+        }
+    }
+    console.log(bestIndex);
+    return bestIndex;
+})
 
 const player = (name, symbol) => {
     const id = 'player';
@@ -167,27 +184,11 @@ const computer = (difficulty, symbol) => {
         }
         //minimax
         else if (difficulty === 'hard') {
-            let bestMove = miniMax(gameBoard.getBoard(), true, symbol, 0);
-            gameBoard.take(gameBoard.getBoard(), bestMove, symbol);
-            const box = document.querySelector(`.gameBoard .box:nth-child(${bestMove + 1})`);
+            let bestIndex = findBestIndex(gameBoard.getBoard(), symbol);
+            gameBoard.take(gameBoard.getBoard(), bestIndex, symbol);
+            const box = document.querySelector(`.gameBoard .box:nth-child(${bestIndex + 1})`);
             box.innerText = symbol;
-            console.log(`Computer takes index ${bestMove}`);
-
-            //terminal function that tells us, we have checkWin in gameBoard for this
-
-            //need to know if max or min turn?
-
-            //need a function that can tell us each of the possible actions are available to the computer
-            //this function will take the game state, and return each possible index possible
-
-            //need a result, which takes a state and a action and tells us new state of game after taking that action.
-            //so another gameBoard copy?
-
-
-
-            //for efficiency
-            //can use alpha-beta pruning to make it more efficient, eliminate parts of game tree we know that wont matter
-            //can use depth , limit ourselves to a depth (not optimal?)
+            console.log(`Computer takes index ${bestIndex}`);
         }
         else {
             console.log('Error!');
