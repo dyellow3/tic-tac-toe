@@ -1,7 +1,6 @@
 //TODO
-//Fix resetBoard()
 //Find a cleaner way to get mainBoard / find a cleaner way to implement gameBoard functions
-//Add option to play against another player , or play against either a easy ai or hard ai
+//Add option to play against another player
 
 const gameBoard = (() => {
     let mainBoard = ['', '', '', '', '', '', '', '', ''];
@@ -21,7 +20,7 @@ const gameBoard = (() => {
         //assumings its a tie
         let flag = true;
         //if theres a win, then its not a tie
-        if(gameBoard.checkWin(board, 'X') || gameBoard.checkWin(board, 'O')) { return false; }
+        if (gameBoard.checkWin(board, 'X') || gameBoard.checkWin(board, 'O')) { return false; }
         for (let i = 0; i < 9; i++) {
             //if theres a empty spot, then its not a tie
             if (gameBoard.check(board, i)) {
@@ -39,8 +38,8 @@ const gameBoard = (() => {
 
     const getBoard = () => mainBoard;
 
-    const resetBoard = (board) => {
-        board = ['', '', '', '', '', '', '', '', ''];
+    const resetBoard = () => {
+        mainBoard = ['', '', '', '', '', '', '', '', ''];
     }
 
     return { check, take, checkTie, checkWin, getBoard, resetBoard }
@@ -71,10 +70,10 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
     }
 
     //so if we are maximizing, it is the computers turn. Therefore, if there is a win, the player made the last move, and they have won
-    if(gameBoard.checkTie(board)) { return 0; }
-    if(isMaximizing && gameBoard.checkWin(board, playerSymbol)) { return -1;  }
-    if(!isMaximizing && gameBoard.checkWin(board, computerSymbol)) {  return 1;  }
-    
+    if (gameBoard.checkTie(board)) { return 0; }
+    if (isMaximizing && gameBoard.checkWin(board, playerSymbol)) { return -1; }
+    if (!isMaximizing && gameBoard.checkWin(board, computerSymbol)) { return 1; }
+
 
     //calculate available moves
     let available = [];
@@ -85,7 +84,7 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
     }
 
     //variables needed for next steps
-    let newBoard; 
+    let newBoard;
     let value;
     let newValue;
 
@@ -97,7 +96,7 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
             newBoard = [...board];
             gameBoard.take(newBoard, available[i], computerSymbol);
             //testing value of move on this newBoard
-            newValue = miniMax(newBoard, false, playerSymbol, depth+1);
+            newValue = miniMax(newBoard, false, playerSymbol, depth + 1);
             if (newValue > value) {
                 value = newValue;
 
@@ -114,7 +113,7 @@ const miniMax = ((board, isMaximizing, symbol, depth) => {
             newBoard = [...board];
             gameBoard.take(newBoard, available[i], playerSymbol);
 
-            newValue = miniMax(newBoard, true, computerSymbol, depth+1);
+            newValue = miniMax(newBoard, true, computerSymbol, depth + 1);
             if (newValue < value) {
                 value = newValue;
             }
@@ -132,7 +131,7 @@ const findBestIndex = ((board, symbol) => {
             available.push(i);
         }
     }
-    
+
     //variables needed for next steps
     let newBoard;
     let playerSymbol;
@@ -140,18 +139,18 @@ const findBestIndex = ((board, symbol) => {
     let bestIndex = -1;
 
     //we are testing each available move
-    for(let i = 0; i < available.length; i++) {
+    for (let i = 0; i < available.length; i++) {
         //newBoard resets everytime to fresh board that we can test moves on
         newBoard = [...board];
 
         //assuming that the symbol in the input is the computers symbol
-        if(symbol === 'X') {  playerSymbol = 'O'; }
+        if (symbol === 'X') { playerSymbol = 'O'; }
         else { playerSymbol = 'X'; }
 
         //testing available move on new board
         gameBoard.take(newBoard, available[i], symbol);
         let moveVal = miniMax(newBoard, false, playerSymbol, 0);
-        if(moveVal > bestVal) {
+        if (moveVal > bestVal) {
             bestIndex = available[i];
             bestVal = moveVal;
         }
@@ -175,13 +174,19 @@ const player = (name, symbol) => {
     return { id, name, symbol, move }
 }
 
-const computer = (difficulty, symbol) => {
+const computer = (diff, symbol) => {
     const name = 'Computer';
     const id = 'computer';
+    let difficulty = diff;
 
+    const toggleDifficulty = () => {
+        if(difficulty==='Easy') { difficulty = 'Hard'; }
+        else { difficulty = 'Easy'; }
+    }
 
     const move = () => {
-        if (difficulty === 'easy') {
+
+        if (difficulty === 'Easy') {
             let randomMove = Math.floor(Math.random() * 9);
             while (!gameBoard.check(gameBoard.getBoard(), randomMove)) {
                 randomMove = Math.floor(Math.random() * 9);
@@ -192,31 +197,55 @@ const computer = (difficulty, symbol) => {
             box.innerText = symbol;
             console.log(`Computer takes index ${randomMove}`);
         }
-        //minimax
-        else if (difficulty === 'hard') {
+
+        //minimax algorithm
+        else if (difficulty === 'Hard') {
             let bestIndex = findBestIndex(gameBoard.getBoard(), symbol);
             gameBoard.take(gameBoard.getBoard(), bestIndex, symbol);
             const box = document.querySelector(`.gameBoard .box:nth-child(${bestIndex + 1})`);
             box.innerText = symbol;
             console.log(`Computer takes index ${bestIndex}`);
         }
+
         else {
             console.log('Error!');
         }
     }
 
-    return { id, name, symbol, move }
+    return { id, name, difficulty, symbol, toggleDifficulty, move }
 }
 
 
 
 const play = (() => {
+    const checkBox = document.getElementById('diffSelect');
+    const switchElement = document.querySelector('.diff-switch');
+    const isChecked = checkBox.checked;
+    const difficulty = isChecked ? switchElement.getAttribute('data-checked') : switchElement.getAttribute('data-unchecked');
+    console.log('Difficulty:', difficulty);
+
+
     const boxes = document.querySelectorAll('.box');
     const gameResult = document.querySelector('.gameResult');
     let round = 0;
     const player1 = player('test', 'X');
     //computer only for now
-    const computer1 = computer('hard', 'O');
+    const computer1 = computer(`${difficulty}`, 'O');
+    checkBox.addEventListener('change', function (event) {
+        if(round !== 0) {
+            event.preventDefault();
+            event.stopPropagation();
+
+        }
+        else {
+            const isChecked = checkBox.checked;
+            const difficulty = isChecked ? switchElement.getAttribute('data-checked') : switchElement.getAttribute('data-unchecked'); 
+            console.log('Difficulty:', difficulty);
+            computer1.toggleDifficulty();
+        }
+        
+    });
+    let currentPlayer = round % 2 === 0 ? player1 : computer1;
     let isComputerTurn = false;
 
     const endGame = (player, round) => {
@@ -235,7 +264,7 @@ const play = (() => {
     }
 
     const resetGame = () => {
-        gameBoard.resetBoard(gameBoard.getBoard());
+        gameBoard.resetBoard();
         round = 0;
         boxes.forEach(box => {
             box.innerText = '';
@@ -249,25 +278,24 @@ const play = (() => {
     const playRound = (event) => {
         if (!isComputerTurn) {
             const box = event.target;
-            let currentPlayer = round % 2 === 0 ? player1 : computer1;
 
             if (currentPlayer.id === 'player') {
                 if (currentPlayer.move(box)) {
                     if ((gameBoard.checkWin(gameBoard.getBoard(), currentPlayer.symbol)) || round === 8) {
                         endGame(currentPlayer, round);
                     }
-                    
+
                     else {
                         round++;
                         console.log(`Round: ${round} over`);
                     }
+                    currentPlayer = round % 2 === 0 ? player1 : computer1;
                 }
             }
 
-            // if its not a player, then its a computer
+            // if the current player is now a computer, we will run its move now
             // so we should run computers move ~2 seconds after players
-            if (round % 2 != 0) {
-                currentPlayer = round % 2 === 0 ? player1 : computer1;
+            if (currentPlayer.id === 'computer') {
                 isComputerTurn = true;
                 setTimeout(() => {
                     currentPlayer.move();
@@ -280,6 +308,7 @@ const play = (() => {
                     }
 
                     isComputerTurn = false;
+                    currentPlayer = round % 2 === 0 ? player1 : computer1;
                 }, 2000);
             }
         }
@@ -287,7 +316,7 @@ const play = (() => {
 
     }
 
-    resetGame();
+    resetGame;
     const resetButton = document.querySelector('.reset');
     resetButton.addEventListener('click', resetGame);
 
